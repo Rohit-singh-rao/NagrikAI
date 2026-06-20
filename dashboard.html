@@ -1,3 +1,4 @@
+
 <!-- AI GRIEVANCE DASHBOARD -->
 
 <!DOCTYPE html>
@@ -14,23 +15,13 @@
     <link rel="stylesheet"
         href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
-    <script
-        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
-    </script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <link rel="stylesheet" href="dashboard.css">
 
 </head>
 
 <body>
-
-    <!-- Theme Toggle -->
-
-    <button id="theme-toggle" onclick="toggleTheme()">
-
-        🌙 Dark Mode
-
-    </button>
 
     <!-- Header -->
 
@@ -51,8 +42,6 @@
 
     <div class="main-container">
 
-        <!-- Left Section -->
-
         <div class="left-panel">
 
             <div class="card">
@@ -65,11 +54,7 @@
 
         </div>
 
-        <!-- Right Section -->
-
         <div class="right-panel">
-
-            <!-- Crisis Score -->
 
             <div class="card">
 
@@ -82,8 +67,6 @@
                 </div>
 
             </div>
-
-            <!-- Complaint Submission -->
 
             <div class="card">
 
@@ -116,8 +99,6 @@
                 </button>
 
             </div>
-
-            <!-- AI Actions -->
 
             <div class="card">
 
@@ -153,8 +134,6 @@
 
             </div>
 
-            <!-- Governance Copilot -->
-
             <div class="card">
 
                 <h2>Governance Copilot</h2>
@@ -167,8 +146,6 @@
 
             </div>
 
-            <!-- Audit Log -->
-
             <div class="card">
 
                 <h2>Live Audit Log</h2>
@@ -180,8 +157,6 @@
         </div>
 
     </div>
-
-    <!-- Footer -->
 
     <footer class="footer">
 
@@ -222,32 +197,448 @@
 
     </footer>
 
-    <!-- Dark Mode Toggle -->
-
     <script>
 
-        function toggleTheme() {
+        // 1. Initialize Map
 
-            document.body.classList.toggle("dark-mode");
+        const map = L.map('map').setView([17.3850, 78.4867], 13);
 
-            const button = document.getElementById("theme-toggle");
+        L.tileLayer(
+            'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+            {
+                attribution: '&copy; OpenStreetMap contributors'
+            }
+        ).addTo(map);
 
-            if (document.body.classList.contains("dark-mode")) {
+        // 2. Ward Boundaries
 
-                button.innerHTML = "☀️ Light Mode";
+        const wardData = {
+
+            "WARD 7": [17.3850, 78.4867],
+
+            "WARD 12": [17.4000, 78.5000],
+
+            "WARD 3": [17.3700, 78.4600]
+
+        };
+
+        for (const [name, coords] of Object.entries(wardData)) {
+
+            L.circle(coords, {
+
+                color: '#1565c0',
+
+                fillColor: '#1565c0',
+
+                fillOpacity: 0.15,
+
+                radius: 800
+
+            }).addTo(map);
+
+            L.marker(coords, {
+
+                icon: L.divIcon({
+
+                    className: 'ward-label',
+
+                    html:
+                        `<div style="font-weight:bold;color:#1565c0;
+                        font-size:16px;text-shadow:1px 1px 2px white;
+                        text-align:center;">${name}</div>`,
+
+                    iconSize: [100, 20],
+
+                    iconAnchor: [50, 10]
+
+                })
+
+            }).addTo(map);
+
+        }
+
+        let markers = [];
+
+        function startVoice() {
+
+        // Check if speech recognition is supported
+        if (!("SpeechRecognition" in window) && !("webkitSpeechRecognition" in window)) {
+            alert("Speech recognition is not supported in this browser.");
+            return;
+        }
+
+        // Get the voice button
+        const voiceBtn =
+            document.querySelector('button[onclick="startVoice()"]') ||
+            document.querySelector(".voice-btn");
+
+        // Change button appearance while listening
+        voiceBtn.innerHTML = "🔴 Listening...";
+        voiceBtn.style.backgroundColor = "#c62828";
+        voiceBtn.style.borderColor = "#c62828";
+
+        // Create recognition object
+        const SpeechRecognition =
+            window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        const recognition = new SpeechRecognition();
+
+        recognition.lang = "en-IN";
+
+        // Function to restore the button
+        function resetButton() {
+            voiceBtn.innerHTML = "🎙️ Speak Complaint";
+            voiceBtn.style.backgroundColor = "";
+            voiceBtn.style.borderColor = "";
+        }
+
+        // Safety timeout (5 seconds)
+        const safetyTimer = setTimeout(function () {
+            recognition.stop();
+            resetButton();
+        }, 5000);
+
+       // Speech detected
+        recognition.onresult = function (event) {
+
+            clearTimeout(safetyTimer);
+
+            document.getElementById("complaintText").value =
+                event.results[0][0].transcript;
+
+            resetButton();
+        };
+
+        // Error handling
+        recognition.onerror = function (event) {
+
+            clearTimeout(safetyTimer);
+
+            console.log("Microphone Error:", event.error);
+
+            voiceBtn.innerHTML = "❌ Mic Error";
+
+            setTimeout(function () {
+                resetButton();
+            }, 2000);
+        };
+
+        // Recognition finished
+        recognition.onend = function () {
+
+            clearTimeout(safetyTimer);
+
+        resetButton();
+        };
+
+        // Start listening
+        recognition.start();
+    }        
+
+        async function submitComplaint() {
+
+            const text =
+                document.getElementById("complaintText").value;
+
+            if (!text) return;
+
+            await fetch(
+                "http://localhost:8000/submit",
+                {
+
+                    method: "POST",
+
+                    headers: {
+
+                        "Content-Type": "application/json"
+
+                    },
+
+                    body: JSON.stringify({
+
+                        text: text
+
+                    })
+
+                }
+            );
+
+            document.getElementById("complaintText").value = "";
+
+            fetchState();
+
+        }
+
+        async function triggerChaos() {
+
+            await fetch(
+                "http://localhost:8000/chaos_button",
+                {
+                    method: "POST"
+                }
+            );
+
+            fetchState();
+
+        }
+
+        async function repairPump() {
+
+            await fetch(
+                "http://localhost:8000/repair_pump",
+                {
+                    method: "POST"
+                }
+            );
+
+            document.getElementById("copilot-box").innerHTML =
+                "<strong style='color:#2e7d32;'>✅ Intervention Successful. World state updated. Crisis averted.</strong>";
+
+            fetchState();
+
+        }
+        async function analyzeRootCause() {
+
+            const response =
+                await fetch("http://localhost:8000/analysis");
+
+            const data = await response.json();
+
+            let copilotHTML = "";
+
+            if (data.confidence > 0) {
+
+                copilotHTML +=
+                    `<div style="font-size:1.2rem;
+                    color:#c62828;
+                    font-weight:bold;
+                    margin-bottom:5px;">
+
+                    ROOT CAUSE CONFIDENCE:
+                    ${data.confidence}%
+
+                    </div>`;
 
             }
 
-            else {
+            copilotHTML +=
+                `<b>Governance Copilot:</b><br>
+                ${data.copilot_summary}`;
 
-                button.innerHTML = "🌙 Dark Mode";
+            document.getElementById("copilot-box").innerHTML =
+                copilotHTML;
+
+            let rootCauseText =
+                "<b>Root Cause Clusters Identified:</b><br>";
+
+            for (const [root, count] of Object.entries(data.groups)) {
+
+                rootCauseText +=
+                    `└─ ${root}
+                    (${count} linked complaints)<br>`;
+
+            }
+
+            const ticker =
+                document.getElementById("audit-ticker");
+
+            ticker.innerHTML =
+                `<div style="color:#f9a825;
+                font-weight:bold;
+                padding-bottom:5px;
+                border-bottom:1px solid #cccccc;
+                margin-bottom:5px;">
+
+                ${rootCauseText}
+
+                </div>` +
+
+                ticker.innerHTML;
+
+        }
+
+        async function fetchState() {
+
+            try {
+
+                const response =
+                    await fetch("http://localhost:8000/state");
+
+                const data =
+                    await response.json();
+
+                document.getElementById(
+                    "crisis-score"
+                ).innerText =
+                    `CRISIS SCORE : ${data.crisis_score}`;
+
+                const ticker =
+                    document.getElementById(
+                        "audit-ticker"
+                    );
+
+                if (
+                    !ticker.innerHTML.includes(
+                        "Root Cause Clusters Identified"
+                    )
+                ) {
+
+                    ticker.innerHTML =
+                        data.audit_log.map(log => {
+
+                            let color =
+                                document.body.classList.contains(
+                                    "dark-mode"
+                                )
+
+                                ? "#dddddd"
+
+                                : "#333333";
+
+                            if (
+
+                                log.includes("OVERRIDE") ||
+
+                                log.includes("BLOCK") ||
+
+                                log.includes("ALERT")
+
+                            ) {
+
+                                color = "#c62828";
+
+                            }
+
+                            if (
+
+                                log.includes("ACTION") ||
+
+                                log.includes("INFO")
+
+                            ) {
+
+                                color = "#00838f";
+
+                            }
+
+                            return `
+
+                                <div
+                                style="margin-bottom:8px;
+                                border-bottom:1px dashed #cccccc;
+                                padding-bottom:4px;
+                                color:${color};">
+
+                                ${log}
+
+                                </div>
+
+                            `;
+
+                        }).join("");
+
+                }
+
+                markers.forEach(marker =>
+
+                    map.removeLayer(marker)
+
+                );
+
+                markers = [];
+
+                data.complaints.forEach(c => {
+
+                    let markerColor = "#fbc02d";
+
+                    if (
+
+                        c.urgency >= 5 &&
+
+                        c.urgency <= 7
+
+                    ) {
+
+                        markerColor = "#f57c00";
+
+                    }
+
+                    if (
+
+                        c.urgency >= 8
+
+                    ) {
+
+                        markerColor = "#d32f2f";
+
+                    }
+
+                    const marker =
+
+                        L.circleMarker(
+
+                            [c.lat, c.lng],
+
+                            {
+
+                                radius: 8,
+
+                                fillColor: markerColor,
+
+                                color: "#ffffff",
+
+                                weight: 1,
+
+                                opacity: 1,
+
+                                fillOpacity: 0.9
+
+                            }
+
+                        )
+
+                        .addTo(map)
+
+                        .bindPopup(
+
+                            `<b>Urgency:</b>
+                            ${c.urgency}/10
+
+                            <br>
+
+                            <b>Category:</b>
+                            ${c.category}
+
+                            <br>
+
+                            <b>Dept:</b>
+                            ${c.department}`
+
+                        );
+
+                    markers.push(marker);
+
+                });
+
+            }
+
+            catch (error) {
+
+                /* Backend not running */
 
             }
 
         }
+
+        setInterval(fetchState, 2000);
+
+        fetchState();
 
     </script>
 
 </body>
 
 </html>
+```
+
+
