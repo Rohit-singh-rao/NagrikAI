@@ -1,3 +1,5 @@
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -8,6 +10,7 @@ app = FastAPI(title="Civic Pulse API")
 
 app.add_middleware(
     CORSMiddleware,
+    app.mount("static",StaticFiles(directory="."),name="static")
     allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
@@ -72,9 +75,9 @@ def simulate_llm_and_rules(text: str, is_bot: bool = False):
 # --- REST ENDPOINTS ---
 
 @app.get("/")
-def health_check():
-    return {"status": "200 OK", "message": "Nagrik.com API is Live"}
-@app.post("/submit")
+def server_dashboard():
+    return 
+FileResponse("dashboard.html")
 
 
 def submit_complaint(payload: Grievance):
