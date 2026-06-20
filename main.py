@@ -71,7 +71,12 @@ def simulate_llm_and_rules(text: str, is_bot: bool = False):
 
 # --- REST ENDPOINTS ---
 
+@app.get("/")
+def health_check():
+    return {"status": "200 OK", "message": "Nagrik.com API is Live"}
 @app.post("/submit")
+
+
 def submit_complaint(payload: Grievance):
     result = simulate_llm_and_rules(payload.text)
     return {"status": "Success", "data": result}
