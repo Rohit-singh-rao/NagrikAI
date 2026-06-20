@@ -1,3 +1,4 @@
+
 /* DASHBOARD PAGE */
 
 body {
@@ -294,62 +295,6 @@ button {
 
 }
 
-/* ---------- DARK MODE ---------- */
-
-.dark-mode {
-
-    background-color: #121212;
-
-}
-
-.dark-mode .header {
-
-    background-color: #0d47a1;
-
-}
-
-.dark-mode .card {
-
-    background-color: #1f1f1f;
-
-}
-
-.dark-mode .card h2 {
-
-    color: #64b5f6;
-
-}
-
-.dark-mode input {
-
-    background-color: #2b2b2b;
-
-    color: white;
-
-    border: 1px solid #666666;
-
-}
-
-.dark-mode #copilot-box,
-
-.dark-mode #audit-ticker {
-
-    color: #dddddd;
-
-}
-
-.dark-mode .footer {
-
-    background-color: black;
-
-}
-
-.dark-mode .footer p {
-
-    color: #bbbbbb;
-
-}
-
 /* Responsive */
 
 @media (max-width: 900px) {
@@ -375,3 +320,4 @@ button {
     }
 
 }
+
