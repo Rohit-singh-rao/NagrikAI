@@ -343,7 +343,7 @@
             if (!text) return;
 
             await fetch(
-                "http://localhost:8000/submit",
+                "https://nagrikai-mavericks.onrender.com",
                 {
 
                     method: "POST",
@@ -372,7 +372,7 @@
         async function triggerChaos() {
 
             await fetch(
-                "http://localhost:8000/chaos_button",
+                "https://nagrikai-mavericks.onrender.com/chaos_button",
                 {
                     method: "POST"
                 }
@@ -385,7 +385,7 @@
         async function repairPump() {
 
             await fetch(
-                "http://localhost:8000/repair_pump",
+                "https://nagrikai-mavericks.onrender.com/repair_pump",
                 {
                     method: "POST"
                 }
@@ -400,7 +400,7 @@
         async function analyzeRootCause() {
 
             const response =
-                await fetch("http://localhost:8000/analysis");
+                await fetch("https://nagrikai-mavericks.onrender.com/analysis");
 
             const data = await response.json();
 
@@ -462,7 +462,7 @@
             try {
 
                 const response =
-                    await fetch("http://localhost:8000/state");
+                    await fetch("https://nagrikai-mavericks.onrender.com/state");
 
                 const data =
                     await response.json();
