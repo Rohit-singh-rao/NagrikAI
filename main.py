@@ -1,20 +1,24 @@
-from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import random
 from datetime import datetime
 
 app = FastAPI(title="Civic Pulse API")
 
+# --- 1. FIXED MIDDLEWARE ---
 app.add_middleware(
     CORSMiddleware,
-    app.mount("static",StaticFiles(directory="."),name="static")
     allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# --- 2. FIXED STATIC MOUNT ---
+app.mount("/static", StaticFiles(directory="."), name="static")
 
 # --- IN-MEMORY SYSTEM STATE ---
 app.state.complaints = []
@@ -72,14 +76,33 @@ def simulate_llm_and_rules(text: str, is_bot: bool = False):
     app.state.complaints.append(llm_output)
     return llm_output
 
-# --- REST ENDPOINTS ---
+
+# --- 3. PAGE ROUTES (The Fix for Navigation) ---
 
 @app.get("/")
-def server_dashboard():
-    return 
-FileResponse("dashboard.html")
+def serve_landing_page():
+    return FileResponse("index.html")
+
+@app.get("/style.css")
+def serve_landing_css():
+    return FileResponse("style.css")
+
+@app.get("/dashboard.html")
+def serve_dashboard():
+    return FileResponse("dashboard.html")
+
+@app.get("/login.html")
+def serve_login():
+    return FileResponse("login.html")
+
+@app.get("/signup.html")
+def serve_signup():
+    return FileResponse("signup.html")
 
 
+# --- 4. REST ENDPOINTS (Your AI Logic) ---
+
+@app.post("/submit")
 def submit_complaint(payload: Grievance):
     result = simulate_llm_and_rules(payload.text)
     return {"status": "Success", "data": result}
