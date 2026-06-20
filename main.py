@@ -9,7 +9,7 @@ from datetime import datetime
 
 app = FastAPI(title="Civic Pulse API")
 
-# --- 1. FIXED MIDDLEWARE ---
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -17,10 +17,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- 2. FIXED STATIC MOUNT ---
+
 app.mount("/static", StaticFiles(directory="."), name="static")
 
-# --- IN-MEMORY SYSTEM STATE ---
+
 app.state.complaints = []
 app.state.audit_log = []
 app.state.infrastructure = {"Pump_17": "Broken"}
@@ -38,7 +38,7 @@ def add_audit(message: str):
 class Grievance(BaseModel):
     text: str
 
-# --- DETERMINISTIC GOVERNANCE RULE ENGINE ---
+
 def simulate_llm_and_rules(text: str, is_bot: bool = False):
     ward_name = random.choice(list(WARDS.keys()))
     is_water_issue = "water" in text.lower() or "flood" in text.lower()
@@ -46,7 +46,7 @@ def simulate_llm_and_rules(text: str, is_bot: bool = False):
     # Armored World State: Only assign to Pump_17 if it's currently broken
     assigned_root = "Pump_17" if is_water_issue and app.state.infrastructure.get("Pump_17") == "Broken" else "Unknown"
     
-    # 1. Mock LLM Structural Extraction
+    
     llm_output = {
         "id": random.randint(1000, 9999),
         "text": text,
@@ -60,12 +60,12 @@ def simulate_llm_and_rules(text: str, is_bot: bool = False):
         "status": "Active"
     }
 
-    # 2. Cyber Resilience Filter
+    
     if is_bot:
         add_audit(f"BLOCK: Bot swarm detected in {ward_name}. 50 duplicate payloads quarantined.")
         return None
 
-    # 3. Neuro-Symbolic Safe Routing Guard
+    
     original_dept = llm_output["department"]
     if llm_output["category"] == "Water Leakage" and original_dept != "Water Board":
         llm_output["department"] = "Water Board"
@@ -77,7 +77,7 @@ def simulate_llm_and_rules(text: str, is_bot: bool = False):
     return llm_output
 
 
-# --- 3. PAGE ROUTES (The Fix for Navigation) ---
+
 
 @app.get("/")
 def serve_landing_page():
@@ -100,7 +100,7 @@ def serve_signup():
     return FileResponse("signup.html")
 
 
-# --- 4. REST ENDPOINTS (Your AI Logic) ---
+
 
 @app.post("/submit")
 def submit_complaint(payload: Grievance):
